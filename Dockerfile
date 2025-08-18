@@ -21,12 +21,16 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # 애플리케이션 코드 복사
 COPY . .
 
+# 임시 디렉토리 생성 (파일 업로드용)
+RUN mkdir -p /tmp && chmod 777 /tmp
+
 # 포트 노출
 EXPOSE 8000
 
 # 환경 변수 설정
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # 애플리케이션 실행
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

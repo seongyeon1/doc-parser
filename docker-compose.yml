@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  table-extraction-api:
+  document-analysis-api:
     build: .
-    container_name: table-extraction-api
+    container_name: document-analysis-api
     ports:
       - "8000:8000"
     environment:
@@ -12,6 +12,8 @@ services:
     volumes:
       # 로그 볼륨 마운트
       - ./logs:/app/logs
+      # 임시 파일 업로드 디렉토리
+      - ./uploads:/tmp/uploads
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -19,11 +21,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
 
   # 개발용 서비스 (핫 리로드)
-  table-extraction-api-dev:
+  document-analysis-api-dev:
     build: .
-    container_name: table-extraction-api-dev
+    container_name: document-analysis-api-dev
     ports:
       - "8001:8000"
     environment:
@@ -33,7 +41,34 @@ services:
       # 소스 코드 변경 시 자동 반영
       - .:/app
       - ./logs:/app/logs
+      # 임시 파일 업로드 디렉토리
+      - ./uploads:/tmp/uploads
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     restart: unless-stopped
     profiles:
       - dev
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # 테스트용 서비스
+  document-analysis-api-test:
+    build: .
+    container_name: document-analysis-api-test
+    ports:
+      - "8002:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+    volumes:
+      # 테스트 파일 및 결과 저장
+      - ./test_files:/app/test_files
+      - ./test_results:/app/test_results
+      - ./uploads:/tmp/uploads
+    command: ["python", "test_pdf_api.py"]
+    restart: "no"
+    profiles:
+      - test

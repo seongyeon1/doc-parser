@@ -1,70 +1,96 @@
 # Git 관련
 .git
 .gitignore
+.gitattributes
+
+# 환경 변수 및 설정
+.env
+.env.local
+.env.*.local
+env_example.txt
+
+# 로그 및 임시 파일
+logs/
+*.log
+uploads/
+test_files/
+test_results/
+tmp/
+temp/
 
 # Python 관련
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 .Python
-env
-pip-log.txt
-pip-delete-this-directory.txt
-.tox
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git
-.mypy_cache
-.pytest_cache
-.hypothesis
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
 # 가상환경
-.venv
 venv/
-ENV/
 env/
+ENV/
 .venv/
+.env/
 
-# IDE 관련
+# IDE 및 편집기
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# OS 관련
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# 로그 파일
-logs/
-*.log
-
-# 환경 변수 파일
-.env
-.env.local
-.env.*.local
-
-# 테스트 파일
-test_*.py
-*_test.py
+# 테스트 관련
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 
 # 문서
-README.md
 *.md
+docs/
+README.md
+USAGE_GUIDE.md
+DOCKER_GUIDE.md
 
 # Docker 관련
-Dockerfile
-docker-compose.yml
+Dockerfile*
+docker-compose*.yml
 .dockerignore
+docker-*.sh
+docker-*.bat
+
+# 샘플 및 테스트 파일
+sample_document.pdf
+create_sample_pdf.py
+test_pdf_api.py
+
+# 기타
+*.bak
+*.tmp
+*.temp
