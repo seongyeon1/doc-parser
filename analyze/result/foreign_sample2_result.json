@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "tables": [
+    {
+      "table_id": "table_1",
+      "title": "Dividends for the financial year ended 31 July 2022",
+      "headers": [
+        "Description",
+        "RM'000"
+      ],
+      "rows": [
+        [
+          "Issuance of new shares in the Company pursuant to the Dividend Reinvestment Plan at the price of RM2.53 per share",
+          "102,218"
+        ],
+        [
+          "Cash dividend",
+          "48,594"
+        ],
+        [
+          "Issuance of new shares in the Company pursuant to the Dividend Reinvestment Plan at the price of RM3.22 per share",
+          "119,586"
+        ],
+        [
+          "Cash dividend",
+          "33,650"
+        ]
+      ],
+      "row_count": 4,
+      "column_count": 2
+    }
+  ],
+  "markdown": "| Description                                                                 | RM'000  |\n|----------------------------------------------------------------------------|---------|\n| Issuance of new shares in the Company pursuant to the Dividend Reinvestment Plan at the price of RM2.53 per share | 102,218 |\n| Cash dividend                                                              | 48,594  |\n| Issuance of new shares in the Company pursuant to the Dividend Reinvestment Plan at the price of RM3.22 per share | 119,586 |\n| Cash dividend                                                              | 33,650  |",
+  "summary": "1 table found with details of dividends for the financial year ended 31 July 2022, including issuance of new shares and cash dividends.",
+  "table_count": 1,
+  "extraction_method": "OpenAI API (gpt-4o)",
+  "metadata": {
+    "processed_at": "2025-08-19T16:21:20.998193",
+    "source_image": "foreign_sample2.png",
+    "api_url": "http://localhost:8000"
+  }
+}

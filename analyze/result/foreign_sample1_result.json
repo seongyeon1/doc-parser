@@ -1,0 +1,72 @@
+{
+  "success": true,
+  "tables": [
+    {
+      "table_id": "table_1",
+      "title": "Financial Summary",
+      "headers": [
+        "",
+        "Group RM'000",
+        "Company RM'000"
+      ],
+      "rows": [
+        [
+          "Profit before tax",
+          "897,799",
+          "501,330"
+        ],
+        [
+          "Income tax expense",
+          "(156,385)",
+          "(30,838)"
+        ],
+        [
+          "Profit for the financial year from continuing operations",
+          "741,414",
+          "470,492"
+        ],
+        [
+          "Profit for the financial year from discontinued operations, net of tax",
+          "94,632",
+          "106,514"
+        ],
+        [
+          "Profit for the financial year",
+          "836,046",
+          "577,006"
+        ],
+        [
+          "Profit attributable to:",
+          "",
+          ""
+        ],
+        [
+          "Owners of the Company",
+          "806,225",
+          "577,006"
+        ],
+        [
+          "Non-controlling interests",
+          "29,821",
+          "-"
+        ],
+        [
+          "Total",
+          "836,046",
+          "577,006"
+        ]
+      ],
+      "row_count": 9,
+      "column_count": 3
+    }
+  ],
+  "markdown": "|                                | Group RM'000 | Company RM'000 |\n|--------------------------------|--------------|----------------|\n| Profit before tax              | 897,799      | 501,330        |\n| Income tax expense             | (156,385)    | (30,838)       |\n| Profit for the financial year from continuing operations | 741,414      | 470,492        |\n| Profit for the financial year from discontinued operations, net of tax | 94,632       | 106,514        |\n| Profit for the financial year  | 836,046      | 577,006        |\n| Profit attributable to:        |              |                |\n| Owners of the Company          | 806,225      | 577,006        |\n| Non-controlling interests      | 29,821       | -              |\n| Total                          | 836,046      | 577,006        |",
+  "summary": "The table provides a financial summary comparing Group and Company figures in RM'000. It includes details on profit before tax, income tax expense, and profit distribution between owners and non-controlling interests.",
+  "table_count": 1,
+  "extraction_method": "OpenAI API (gpt-4o)",
+  "metadata": {
+    "processed_at": "2025-08-19T16:21:09.611464",
+    "source_image": "foreign_sample1.png",
+    "api_url": "http://localhost:8000"
+  }
+}

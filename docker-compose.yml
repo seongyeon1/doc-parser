@@ -1,39 +1,73 @@
 version: '3.8'
 
 services:
-  table-extraction-api:
-    build: .
-    container_name: table-extraction-api
+  # API 서버
+  api-server:
+    build:
+      context: ./doc-parser
+      dockerfile: Dockerfile
+    container_name: doc-parser-api
     ports:
-      - "8000:8000"
+      - "0.0.0.0:8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - PYTHONPATH=/app
     volumes:
-      # 로그 볼륨 마운트
-      - ./logs:/app/logs
+      - ./doc-parser:/app
+      - ./analyze/data:/app/analyze/data
+      - ./analyze/result:/app/analyze/result
+    networks:
+      - doc-parser-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
 
-  # 개발용 서비스 (핫 리로드)
-  table-extraction-api-dev:
-    build: .
-    container_name: table-extraction-api-dev
+  # 시각화 서버
+  viz-server:
+    build:
+      context: ./analyze
+      dockerfile: Dockerfile
+    container_name: doc-parser-viz
     ports:
-      - "8001:8000"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - "0.0.0.0:8080:8080"
     volumes:
-      # 소스 코드 변경 시 자동 반영
-      - .:/app
-      - ./logs:/app/logs
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+      - ./analyze:/app
+      - ./analyze/data:/app/data
+      - ./analyze/result:/app/result
+    networks:
+      - doc-parser-network
     restart: unless-stopped
-    profiles:
-      - dev
+    depends_on:
+      - api-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx 리버스 프록시 (선택사항)
+  nginx:
+    image: nginx:alpine
+    container_name: doc-parser-nginx
+    ports:
+      - "0.0.0.0:80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - doc-parser-network
+    restart: unless-stopped
+    depends_on:
+      - api-server
+      - viz-server
+
+networks:
+  doc-parser-network:
+    driver: bridge
+
+volumes:
+  data-volume:
+  result-volume:

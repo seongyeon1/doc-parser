@@ -1,0 +1,146 @@
+# 🐳 Document Parser Project - Docker Makefile
+# Docker 환경에서 전체 프로젝트를 관리할 수 있는 Makefile
+
+.PHONY: help docker-build docker-start docker-stop docker-clean docker-logs docker-shell docker-test
+
+# 기본 설정
+COMPOSE_FILE = docker-compose.yml
+PROJECT_NAME = doc-parser
+
+# 도움말
+help:
+	@echo "🐳 Document Parser Project - Docker Makefile 도움말"
+	@echo "================================================"
+	@echo ""
+	@echo "🔧 Docker 명령어:"
+	@echo "  make docker-build    - Docker 이미지 빌드"
+	@echo "  make docker-start    - Docker 컨테이너 시작"
+	@echo "  make docker-stop     - Docker 컨테이너 중지"
+	@echo "  make docker-restart  - Docker 컨테이너 재시작"
+	@echo "  make docker-clean    - Docker 컨테이너 및 이미지 정리"
+	@echo "  make docker-logs     - Docker 로그 확인"
+	@echo "  make docker-shell    - Docker 컨테이너 쉘 접속"
+	@echo "  make docker-status   - Docker 컨테이너 상태 확인"
+	@echo "  make docker-test     - Docker 환경에서 테스트 실행"
+	@echo "  make docker-update   - Docker 이미지 업데이트"
+	@echo ""
+
+# Docker 이미지 빌드
+docker-build:
+	@echo "🔨 Docker 이미지 빌드 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) build
+	@echo "✅ Docker 이미지 빌드 완료!"
+
+# Docker 컨테이너 시작
+docker-start:
+	@echo "🚀 Docker 컨테이너 시작 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) up -d
+	@echo "✅ Docker 컨테이너가 시작되었습니다!"
+	@echo "📊 API 서버: http://0.0.0.0:8000 (외부 접근 가능)"
+	@echo "🌐 시각화 도구: http://0.0.0.0:8080/visualize_results.html (외부 접근 가능)"
+	@echo "🌍 통합 접속: http://0.0.0.0 (Nginx, 외부 접근 가능)"
+	@echo ""
+	@echo "💡 외부 접근:"
+	@echo "  - API 서버: http://[서버IP]:8000"
+	@echo "  - 시각화 도구: http://[서버IP]:8080/visualize_results.html"
+	@echo "  - 통합 접속: http://[서버IP]"
+
+# Docker 컨테이너 중지
+docker-stop:
+	@echo "🛑 Docker 컨테이너 중지 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) down
+	@echo "✅ Docker 컨테이너가 중지되었습니다."
+
+# Docker 컨테이너 재시작
+docker-restart:
+	@echo "🔄 Docker 컨테이너 재시작 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) restart
+	@echo "✅ Docker 컨테이너가 재시작되었습니다."
+
+# Docker 컨테이너 및 이미지 정리
+docker-clean:
+	@echo "🧹 Docker 정리 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) down -v --rmi all
+	docker system prune -f
+	@echo "✅ Docker 정리 완료!"
+
+# Docker 로그 확인
+docker-logs:
+	@echo "📋 Docker 로그 확인 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) logs -f
+
+# 특정 서비스 로그 확인
+docker-logs-api:
+	@echo "📋 API 서버 로그 확인 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) logs -f api-server
+
+docker-logs-viz:
+	@echo "📋 시각화 서버 로그 확인 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) logs -f viz-server
+
+# Docker 컨테이너 쉘 접속
+docker-shell:
+	@echo "🐚 Docker 컨테이너 쉘 접속 중..."
+	@echo "사용 가능한 서비스:"
+	@echo "  make docker-shell-api    - API 서버 쉘 접속"
+	@echo "  make docker-shell-viz    - 시각화 서버 쉘 접속"
+	@echo "  make docker-shell-nginx  - Nginx 쉘 접속"
+
+docker-shell-api:
+	@echo "🐚 API 서버 쉘 접속 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) exec api-server /bin/bash
+
+docker-shell-viz:
+	@echo "🐚 시각화 서버 쉘 접속 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) exec viz-server /bin/bash
+
+docker-shell-nginx:
+	@echo "🐚 Nginx 쉘 접속 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) exec nginx /bin/sh
+
+# Docker 컨테이너 상태 확인
+docker-status:
+	@echo "📊 Docker 컨테이너 상태 확인 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) ps
+	@echo ""
+	@echo "🔍 상세 상태:"
+	docker stats --no-stream
+
+# Docker 환경에서 테스트 실행
+docker-test:
+	@echo "🧪 Docker 환경에서 테스트 실행 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) exec api-server python -m pytest test_*.py -v
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) exec viz-server python test_processor.py
+	@echo "✅ Docker 테스트 완료!"
+
+# Docker 이미지 업데이트
+docker-update:
+	@echo "🔄 Docker 이미지 업데이트 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) pull
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) build --no-cache
+	@echo "✅ Docker 이미지 업데이트 완료!"
+
+# 개발 모드 (볼륨 마운트)
+docker-dev:
+	@echo "🔧 개발 모드로 Docker 시작 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) -f docker-compose.dev.yml up -d
+	@echo "✅ 개발 모드 Docker가 시작되었습니다!"
+
+# 프로덕션 모드
+docker-prod:
+	@echo "🚀 프로덕션 모드로 Docker 시작 중..."
+	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) -f docker-compose.prod.yml up -d
+	@echo "✅ 프로덕션 모드 Docker가 시작되었습니다!"
+
+# 백업 및 복원
+docker-backup:
+	@echo "💾 Docker 데이터 백업 중..."
+	@mkdir -p backups
+	docker run --rm -v $(PROJECT_NAME)_data-volume:/data -v $(PWD)/backups:/backup alpine tar czf /backup/data_backup_$(shell date +%Y%m%d_%H%M%S).tar.gz /data
+	@echo "✅ 백업 완료: backups/ 폴더 확인"
+
+# 빠른 시작 (빌드 + 시작)
+docker-quick-start: docker-build docker-start
+	@echo ""
+	@echo "🎉 Docker 빠른 시작 완료!"
+	@echo "브라우저에서 http://localhost:8080/visualize_results.html 열기"

@@ -1,110 +1,88 @@
 #!/bin/bash
 
-# Docker 실행 스크립트
-# Table Extraction API를 Docker로 실행합니다.
+# 🐳 Document Parser API Docker 실행 스크립트
+# 백그라운드 이미지 처리를 포함한 전체 시스템을 실행합니다.
 
 set -e
 
-echo "🐳 Table Extraction API Docker 실행 스크립트"
-echo "=========================================="
-
-# Docker 실행 확인
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker가 설치되지 않았습니다."
-    echo "📝 Docker Desktop을 설치하고 실행하세요."
-    exit 1
-fi
-
-if ! docker info &> /dev/null; then
-    echo "❌ Docker가 실행되지 않았습니다."
-    echo "📝 Docker Desktop을 시작하세요."
-    exit 1
-fi
-
-# Docker Compose 확인
-if ! command -v docker-compose &> /dev/null; then
-    echo "❌ Docker Compose가 설치되지 않았습니다."
-    echo "📝 Docker Compose를 설치하세요."
-    exit 1
-fi
+echo "🚀 Document Parser API Docker 실행 시작..."
 
 # 환경 변수 파일 확인
 if [ ! -f .env ]; then
-    echo "❌ .env 파일이 없습니다."
-    echo "📝 .env 파일을 생성하고 OpenAI API 키를 설정하세요:"
-    echo "   OPENAI_API_KEY=your_api_key_here"
-    echo "   OPENAI_MODEL=gpt-4o"
+    echo "⚠️  .env 파일이 없습니다. 기본값으로 실행합니다."
+    echo "OPENAI_API_KEY=your_api_key_here" > .env
+    echo "OPENAI_MODEL=gpt-4o" >> .env
+    echo "📝 .env 파일을 생성했습니다. OpenAI API 키를 설정해주세요."
+    echo "   OPENAI_API_KEY=your_actual_api_key"
     exit 1
 fi
 
 # 환경 변수 로드
 source .env
 
-# API 키 확인
-if [ -z "$OPENAI_API_KEY" ] || [ "$OPENAI_API_KEY" = "your_api_key_here" ]; then
-    echo "❌ OPENAI_API_KEY가 설정되지 않았습니다."
-    echo "📝 .env 파일에서 올바른 API 키를 설정하세요."
+# OpenAI API 키 확인
+if [ "$OPENAI_API_KEY" = "your_api_key_here" ] || [ -z "$OPENAI_API_KEY" ]; then
+    echo "❌ OpenAI API 키가 설정되지 않았습니다."
+    echo "   .env 파일에서 OPENAI_API_KEY를 설정해주세요."
     exit 1
 fi
 
 echo "✅ 환경 변수 확인 완료"
-echo "🔑 API 모델: ${OPENAI_MODEL:-gpt-4o}"
+echo "   OpenAI Model: ${OPENAI_MODEL:-gpt-4o}"
 
 # 기존 컨테이너 정리
 echo "🧹 기존 컨테이너 정리 중..."
 docker-compose down --remove-orphans 2>/dev/null || true
 
+# 필요한 디렉토리 생성
+echo "📁 필요한 디렉토리 생성 중..."
+mkdir -p analyze/data analyze/result
+
 # Docker 이미지 빌드
 echo "🔨 Docker 이미지 빌드 중..."
-docker-compose build --no-cache
+docker-compose build
 
-if [ $? -ne 0 ]; then
-    echo "❌ Docker 이미지 빌드에 실패했습니다."
-    echo "📋 로그를 확인하세요: docker-compose logs"
-    exit 1
-fi
-
-# 컨테이너 실행
-echo "🚀 컨테이너 실행 중..."
+# 서비스 시작
+echo "🚀 서비스 시작 중..."
 docker-compose up -d
 
-if [ $? -ne 0 ]; then
-    echo "❌ 컨테이너 실행에 실패했습니다."
-    echo "📋 로그를 확인하세요: docker-compose logs"
+# 서비스 상태 확인
+echo "📊 서비스 상태 확인 중..."
+sleep 5
+
+# API 서버 헬스체크
+echo "🏥 API 서버 헬스체크 중..."
+if curl -f http://localhost:8000/health >/dev/null 2>&1; then
+    echo "✅ API 서버가 정상적으로 실행되고 있습니다."
+    echo "   📍 API 엔드포인트: http://localhost:8000"
+    echo "   📍 백그라운드 처리: http://localhost:8000/background/extract-tables"
+    echo "   📍 작업 상태 확인: http://localhost:8000/background/task-status/{task_id}"
+else
+    echo "❌ API 서버가 정상적으로 실행되지 않았습니다."
+    echo "   로그를 확인해주세요: docker-compose logs api-server"
     exit 1
 fi
 
-# 상태 확인
-echo "⏳ 서비스 시작 대기 중..."
-sleep 15
+# 시각화 서버 확인
+echo "🎨 시각화 서버 확인 중..."
+if curl -f http://localhost:8080 >/dev/null 2>&1; then
+    echo "✅ 시각화 서버가 정상적으로 실행되고 있습니다."
+    echo "   📍 시각화 페이지: http://localhost:8080/visualize_results.html"
+else
+    echo "⚠️  시각화 서버가 아직 시작되지 않았습니다. 잠시 후 다시 시도해주세요."
+fi
 
-# 헬스 체크
-echo "🏥 헬스 체크 중..."
-max_attempts=10
-attempt=1
-
-while [ $attempt -le $max_attempts ]; do
-    if curl -f http://localhost:8000/health > /dev/null 2>&1; then
-        echo "✅ 서비스가 정상적으로 실행되었습니다!"
-        echo "🌐 API 문서: http://localhost:8000/docs"
-        echo "🔍 헬스 체크: http://localhost:8000/health"
-        echo "📊 표 추출 API: http://localhost:8000/extract-tables"
-        echo ""
-        echo "📝 사용법:"
-        echo "   - API 문서: http://localhost:8000/docs"
-        echo "   - 파일 업로드: POST /extract-tables"
-        echo "   - 로그 확인: docker-compose logs -f"
-        echo "   - 서비스 중지: docker-compose down"
-        echo ""
-        echo "🎯 브라우저에서 http://localhost:8000/docs 를 열어 API를 테스트하세요!"
-        exit 0
-    else
-        echo "⏳ 서비스 시작 대기 중... (시도 $attempt/$max_attempts)"
-        sleep 5
-        attempt=$((attempt + 1))
-    fi
-done
-
-echo "❌ 서비스 시작에 실패했습니다."
-echo "📋 로그를 확인하세요: docker-compose logs"
-exit 1
+echo ""
+echo "🎉 Document Parser API가 성공적으로 실행되었습니다!"
+echo ""
+echo "📋 사용 방법:"
+echo "   1. 이미지 업로드: http://localhost:8000/upload-image"
+echo "   2. 백그라운드 처리: http://localhost:8000/background/extract-tables"
+echo "   3. 시각화: http://localhost:8080/visualize_results.html"
+echo ""
+echo "🔍 로그 확인:"
+echo "   API 서버: docker-compose logs -f api-server"
+echo "   전체 로그: docker-compose logs -f"
+echo ""
+echo "🛑 서비스 중지: docker-compose down"
+echo "🔄 서비스 재시작: docker-compose restart"

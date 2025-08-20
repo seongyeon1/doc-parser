@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "tables": [
+    {
+      "table_id": "table_1",
+      "title": "Auditors' remuneration",
+      "headers": [
+        "",
+        "Group RM'000",
+        "Company RM'000"
+      ],
+      "rows": [
+        [
+          "Ernst & Young PLT",
+          "1,951",
+          "639"
+        ],
+        [
+          "Other auditors",
+          "160",
+          "93"
+        ],
+        [
+          "",
+          "2,111",
+          "732"
+        ]
+      ],
+      "row_count": 3,
+      "column_count": 3
+    }
+  ],
+  "markdown": "|                     | Group RM'000 | Company RM'000 |\n|---------------------|--------------|----------------|\n| Ernst & Young PLT   | 1,951        | 639            |\n| Other auditors      | 160          | 93             |\n|                     | 2,111        | 732            |",
+  "summary": "1개의 표가 발견되었습니다. 이 표는 감사인의 보수에 관한 내용을 담고 있으며, 'Ernst & Young PLT'와 'Other auditors'의 보수를 그룹과 회사 단위로 나누어 보여줍니다.",
+  "table_count": 1,
+  "extraction_method": "OpenAI API (gpt-4o)",
+  "metadata": {
+    "processed_at": "2025-08-19T16:22:18.843386",
+    "source_image": "foreign_sample5.png",
+    "api_url": "http://localhost:8000"
+  }
+}

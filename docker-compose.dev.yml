@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # API 서버 (개발 모드)
+  api-server:
+    build:
+      context: ./doc-parser
+      dockerfile: Dockerfile.dev
+    ports:
+      - "0.0.0.0:8000:8000"
+    volumes:
+      - ./doc-parser:/app
+      - ./analyze/data:/app/data
+      - ./analyze/result:/app/result
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - DEBUG=1
+    command: ["python", "-u", "main.py"]
+    restart: "no"
+
+  # 시각화 서버 (개발 모드)
+  viz-server:
+    build:
+      context: ./analyze
+      dockerfile: Dockerfile.dev
+    ports:
+      - "0.0.0.0:8080:8080"
+    volumes:
+      - ./analyze:/app
+      - ./analyze/data:/app/data
+      - ./analyze/result:/app/result
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - DEBUG=1
+    command: ["python", "-u", "serve_files.py"]
+    restart: "no"
+
+  # Nginx (개발 모드)
+  nginx:
+    volumes:
+      - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro
+    restart: "no"
