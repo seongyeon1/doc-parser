@@ -2,6 +2,14 @@
 
 이 가이드는 OpenAI의 Vision API와 Image API를 활용한 Document Analysis API의 사용법을 설명합니다.
 
+## 🆕 새로운 기능: 향상된 표 추출
+
+### ✨ 주요 개선사항
+- **PNG 이미지 직접 지원**: Vision API를 통한 이미지 표 추출
+- **모델 선택 가능**: 사용자가 원하는 OpenAI 모델 선택
+- **자동 모델 검증**: Vision API 지원 여부 자동 확인
+- **다양한 파일 형식**: PDF, DOCX, Excel, 모든 이미지 형식 지원
+
 ## 🚀 빠른 시작
 
 ### 1. 환경 설정
@@ -30,6 +38,9 @@ python test_pdf_api.py
 
 # 이미지 분석 및 생성 테스트
 python test_image_api.py
+
+# 표 추출 API 테스트 (새로운 기능)
+python test_extract_tables_api.py
 ```
 
 ## 📚 API 사용법
@@ -62,6 +73,84 @@ def analyze_image_direct(image_path, prompt="이 이미지를 분석하고 주�
 
 # 사용 예시
 analyze_image_direct("sample_image.jpg", "이 이미지에서 표를 찾아주세요.", "high")
+```
+
+### 📊 표 추출 (새로운 기능)
+
+#### 기본 사용법
+```python
+import requests
+
+def extract_tables(file_path, model=None):
+    """
+    파일에서 표를 추출합니다.
+    
+    Args:
+        file_path: 분석할 파일 경로
+        model: 사용할 모델명 (선택사항)
+    """
+    with open(file_path, "rb") as f:
+        files = {"file": (file_path, f, "application/octet-stream")}
+        data = {}
+        
+        if model:
+            data["model"] = model
+        
+        response = requests.post(
+            "http://localhost:8000/extract-tables",
+            files=files,
+            data=data
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            print(f"표 추출 성공! {result['table_count']}개의 표 발견")
+            print(f"사용 모델: {result['extraction_method']}")
+            
+            # 표 데이터 출력
+            for i, table in enumerate(result['tables']):
+                print(f"\n표 {i+1}: {table.get('title', '제목 없음')}")
+                print(f"행: {table.get('row_count', 0)}, 열: {table.get('column_count', 0)}")
+            
+            # Markdown 형식 출력
+            print(f"\nMarkdown 형식:\n{result['markdown']}")
+            
+            return result
+        else:
+            print("표 추출 실패:", response.text)
+            return None
+
+# 사용 예시
+# 기본 모델 사용
+extract_tables("document.pdf")
+
+# 특정 모델 지정
+extract_tables("document.pdf", model="gpt-4o-mini")
+
+# PNG 이미지에서 표 추출
+extract_tables("table.png", model="gpt-4o")
+```
+
+#### 모델 선택 가이드
+```python
+# Vision API 지원 모델 (이미지 처리에 권장)
+vision_models = [
+    "gpt-4o",           # 기본 모델, 고품질
+    "gpt-4o-mini",      # 빠른 처리, 비용 효율적
+    "gpt-4-vision-preview"  # 최고 품질
+]
+
+# 일반 텍스트 처리 모델
+text_models = [
+    "gpt-4o",
+    "gpt-4o-mini", 
+    "gpt-3.5-turbo"
+]
+
+# 자동 모델 선택 (API가 자동으로 적절한 모델 선택)
+def extract_tables_auto(file_path):
+    return extract_tables(file_path)  # model 파라미터 생략
+```
 ```
 
 #### 방법 2: 파일 업로드 후 분석

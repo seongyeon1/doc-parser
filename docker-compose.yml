@@ -1,22 +1,23 @@
 version: '3.8'
 
 services:
-  # API 서버
-  api-server:
+  # Backend API Server
+  backend:
     build:
-      context: ./doc-parser
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: doc-parser-api
+    container_name: doc-parser-backend
     ports:
-      - "0.0.0.0:8000:8000"
+      - "8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
       - PYTHONPATH=/app
     volumes:
-      - ./doc-parser:/app
-      - ./analyze/data:/app/analyze/data
-      - ./analyze/result:/app/analyze/result
+      - ./backend:/app
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
     networks:
       - doc-parser-network
     restart: unless-stopped
@@ -25,49 +26,63 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
-  # 시각화 서버
-  viz-server:
+  # Frontend Application
+  frontend:
     build:
-      context: ./analyze
+      context: ./frontend
       dockerfile: Dockerfile
-    container_name: doc-parser-viz
+    container_name: doc-parser-frontend
     ports:
-      - "0.0.0.0:8080:8080"
+      - "3000:80"
     volumes:
-      - ./analyze:/app
-      - ./analyze/data:/app/data
-      - ./analyze/result:/app/result
+      - ./frontend:/app
+      - /app/node_modules
     networks:
       - doc-parser-network
     restart: unless-stopped
     depends_on:
-      - api-server
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - backend
 
-  # Nginx 리버스 프록시 (선택사항)
-  nginx:
-    image: nginx:alpine
-    container_name: doc-parser-nginx
+  # Redis for background tasks
+  redis:
+    image: redis:7-alpine
+    container_name: doc-parser-redis
     ports:
-      - "0.0.0.0:80:80"
+      - "6379:6379"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - redis_data:/data
+    networks:
+      - doc-parser-network
+    restart: unless-stopped
+
+  # Celery worker for background processing
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: doc-parser-celery
+    command: ["celery", "-A", "background_processor", "worker", "--loglevel=info"]
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
     networks:
       - doc-parser-network
     restart: unless-stopped
     depends_on:
-      - api-server
-      - viz-server
+      - redis
+      - backend
 
 networks:
   doc-parser-network:
     driver: bridge
 
 volumes:
-  data-volume:
-  result-volume:
+  redis_data:
