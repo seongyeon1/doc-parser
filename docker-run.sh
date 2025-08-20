@@ -30,31 +30,45 @@ fi
 echo "✅ 환경 변수 확인 완료"
 echo "   OpenAI Model: ${OPENAI_MODEL:-gpt-4o}"
 
-# 기존 컨테이너 정리
-echo "🧹 기존 컨테이너 정리 중..."
-docker-compose down --remove-orphans 2>/dev/null || true
-
 # 필요한 디렉토리 생성
-echo "📁 필요한 디렉토리 생성 중..."
-mkdir -p analyze/data analyze/result
+echo "📁 필요한 디렉토리를 생성합니다..."
+mkdir -p logs
+mkdir -p uploads
+mkdir -p test_files
+mkdir -p test_results
+mkdir -p analyze/data
+mkdir -p analyze/result
 
 # Docker 이미지 빌드
 echo "🔨 Docker 이미지 빌드 중..."
 docker-compose build
 
+if [ $? -ne 0 ]; then
+    echo "❌ Docker 이미지 빌드에 실패했습니다."
+    exit 1
+fi
+
 # 서비스 시작
 echo "🚀 서비스 시작 중..."
 docker-compose up -d
 
+if [ $? -ne 0 ]; then
+    echo "❌ 서비스 실행에 실패했습니다."
+    exit 1
+fi
+
 # 서비스 상태 확인
 echo "📊 서비스 상태 확인 중..."
-sleep 5
+sleep 10
 
 # API 서버 헬스체크
 echo "🏥 API 서버 헬스체크 중..."
-if curl -f http://localhost:8000/health >/dev/null 2>&1; then
+response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
+
+if [ "$response" = "200" ]; then
     echo "✅ API 서버가 정상적으로 실행되고 있습니다."
     echo "   📍 API 엔드포인트: http://localhost:8000"
+    echo "   📍 API 문서: http://localhost:8000/docs"
     echo "   📍 백그라운드 처리: http://localhost:8000/background/extract-tables"
     echo "   📍 작업 상태 확인: http://localhost:8000/background/task-status/{task_id}"
 else
@@ -80,9 +94,14 @@ echo "   1. 이미지 업로드: http://localhost:8000/upload-image"
 echo "   2. 백그라운드 처리: http://localhost:8000/background/extract-tables"
 echo "   3. 시각화: http://localhost:8080/visualize_results.html"
 echo ""
+echo "🧪 테스트:"
+echo "   - 샘플 PDF 생성: python create_sample_pdf.py"
+echo "   - API 테스트: python test_pdf_api.py"
+echo ""
 echo "🔍 로그 확인:"
 echo "   API 서버: docker-compose logs -f api-server"
 echo "   전체 로그: docker-compose logs -f"
 echo ""
-echo "🛑 서비스 중지: docker-compose down"
-echo "🔄 서비스 재시작: docker-compose restart"
+echo "🔧 관리 명령어:"
+echo "   - 서비스 중지: docker-compose down"
+echo "   - 서비스 재시작: docker-compose restart"
